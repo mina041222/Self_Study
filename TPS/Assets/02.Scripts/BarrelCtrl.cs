@@ -68,11 +68,16 @@ public class BarrelCtrl : MonoBehaviour
 
     }
 
+    //결과값을 저장할 정적 배열을 미리 선언
+    Collider[] colls = new Collider[10];
     //폭팔력을 주변에 전달하는 함수
     void IndirectDamage(Vector3 pos)
     {
-        //주변에 있는 드럼통을 모두 추출
-        Collider[] colls = Physics.OverlapSphere(pos, radius, 1 << 3);
+        //가비지 컬렉션이 발생
+        //Collider[] colls = Physics.OverlapSphere(pos, radius, 1 << 3);
+
+        //가비지 컬렉션이 발생하지 않음
+        Physics.OverlapSphereNonAlloc(pos, radius, colls, 1 << 3);
 
         foreach(var coll in colls)
         {
