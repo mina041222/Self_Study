@@ -20,7 +20,7 @@ public class MonsterCtrl : MonoBehaviour
     //추적 사정거리
     public float traceDist = 10.0f;
     //공격 사정거리
-    public float attackDist = 2.0f;
+    public float attackDist = 1.0f;
     //몬스터의 사망 여부
     public bool isDie = false;
 
@@ -29,6 +29,12 @@ public class MonsterCtrl : MonoBehaviour
     private Transform playerTr;
     private NavMeshAgent agent;
     private Animator anim;
+    //Animator 파라미터의 해시값 추출
+    private readonly int hashTrace = Animator.StringToHash("IsTrace");
+    private readonly int hashAttack = Animator.StringToHash("IsAttack");
+    private readonly int hashHit = Animator.StringToHash("Hit");
+    //혈흔 효과 프리팹
+    private GameObject bloodEffect;
 
     // Start is called before the first frame update
     void Start()
@@ -47,6 +53,9 @@ public class MonsterCtrl : MonoBehaviour
 
         //Animator 컴포넌트 할당
         anim = GetComponent<Animator>();
+
+        //BloodSprayEffect 프리팹 로드
+        bloodEffect = Resources.Load<GameObject>("BloodSprayEffect");
 
         //몬스터의 상태를 체크하는 코루틴 함수 호출
         StartCoroutine(CheckMonsterState());
@@ -93,7 +102,7 @@ public class MonsterCtrl : MonoBehaviour
                     //추적 중지
                     agent.isStopped = true;
                     // Animator의 IsTrace 변수를 flase로 설정
-                    anim.SetBool("IsTrace", false);
+                    anim.SetBool(hashTrace, false);
                     break;
 
                 //추적 상태
@@ -102,11 +111,15 @@ public class MonsterCtrl : MonoBehaviour
                     agent.SetDestination(playerTr.position);
                     agent.isStopped = false;
                     //Animator의 IsTrace 변수를 true로 설정
-                    anim.SetBool("IsTrace", true);
+                    anim.SetBool(hashTrace, true);
+                    //Animator의 IsAttack 변수를 false로 설정
+                    anim.SetBool(hashAttack, false);
                     break;
 
                 //공격 상태
                 case State.ATTACK:
+                    //Animator의 IsAttack 변수를 true로 설정
+                    anim.SetBool(hashAttack, true);
                     break;
 
                 //사망
@@ -115,6 +128,30 @@ public class MonsterCtrl : MonoBehaviour
             }
             yield return new WaitForSeconds(0.3f);
         }
+    }
+    void OnCollisionEnter(Collision coll)
+    {
+        if(coll.collider.CompareTag("BULLET"))
+        {
+            //충돌한 총알을 삭제
+            Destroy(coll.gameObject);
+            //피격 리엑션 애니메이션 실행
+            anim.SetTrigger(hashHit);
+
+            //총알의 충돌 지점
+            Vector3 pos = coll.GetContact(0).point;
+            //총알의 충돌지점의 법선 벡터
+            Quaternion rot = Quaternion.LookRotation(-coll.GetContact(0).normal);
+            //혈흔 효과를 생성하는 함수 호출
+            ShowBloodEffect(pos, rot);
+        }
+    }
+
+    void ShowBloodEffect(Vector3 pos, Quaternion rot)
+    {
+        //혈흔 효과 생성
+        GameObject blood = Instantiate<GameObject>(bloodEffect, pos, rot, monsterTr);
+        Destroy(blood, 1.0f);
     }
     void OnDrawGizmos()
     {
