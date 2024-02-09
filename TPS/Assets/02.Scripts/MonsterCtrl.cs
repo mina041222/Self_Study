@@ -33,6 +33,8 @@ public class MonsterCtrl : MonoBehaviour
     private readonly int hashTrace = Animator.StringToHash("IsTrace");
     private readonly int hashAttack = Animator.StringToHash("IsAttack");
     private readonly int hashHit = Animator.StringToHash("Hit");
+    private readonly int hashPlayerDie = Animator.StringToHash("PlayerDie");
+    private readonly int hashSpeed = Animator.StringToHash("Speed");
     //혈흔 효과 프리팹
     private GameObject bloodEffect;
 
@@ -167,6 +169,22 @@ public class MonsterCtrl : MonoBehaviour
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(transform.position, attackDist);
         }
+    }
+
+    void OnTriggerEnter(Collider coll)
+    {
+        Debug.Log(coll.gameObject.name);
+    }
+
+    void OnPlayerDie()
+    {
+        //몬스터의 상태를 체크하는 코루틴 함수를 모두 정지시킴
+        StopAllCoroutines();
+
+        //추적을 정지하고 애니메이션을 수행
+        agent.isStopped = true;
+        anim.SetFloat(hashSpeed, Random.Range(0.8f, 1.2f));
+        anim.SetTrigger(hashPlayerDie);
     }
 }
 
