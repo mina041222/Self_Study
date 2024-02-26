@@ -1,4 +1,4 @@
-using System.Collections;
+using UnityEngine;
 using UnityEngine.UI;   //Unity-UI룰 사용하기 위해 선언한 네임스페이스
 using UnityEngine.Events;    //UnityEvent 관련 API를 사용하기 위해 선언한 네임스페이스
 
@@ -11,7 +11,7 @@ public class UIManager : MonoBehaviour
 
     private UnityAction action;
 
-    public Start()
+    void Start()
     {
         //UnityAction을 사용한 이벤트 연결 방식
         action = () => OnButtonClick(startButton.name);
@@ -23,7 +23,7 @@ public class UIManager : MonoBehaviour
         //람다식을 활용한 이벤트 연결 방식
         shopButton.onClick.AddListener(() => OnButtonClick(shopButton.name));
     }
-    public void OnButtonClick()
+    public void OnButtonClick(string msg)
     {
         Debug.Log($"Click Button :{msg}");
     }
