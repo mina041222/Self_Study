@@ -47,6 +47,12 @@ public class MonsterCtrl : MonoBehaviour
     {
         //이벤트 발생시 수행할 함수 연결
         PlayerCtrl.OnPlayerDie += this.OnPlayerDie;
+
+        //몬스터의 상태를 체크하는 코루틴 함수 호출
+        StartCoroutine(CheckMonsterState());
+
+        //상태에 따라 몬스터의 행동을 수행하는 코루틴 함수 호출
+        StartCoroutine(MonsterAction());
     }
     
     //스크립트가 비활성화 될때마다 호출되는 함수
@@ -57,7 +63,7 @@ public class MonsterCtrl : MonoBehaviour
     }
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         //몬스터의 Transform 할당
         monsterTr = GetComponent<Transform>();
@@ -76,12 +82,6 @@ public class MonsterCtrl : MonoBehaviour
 
         //BloodSprayEffect 프리팹 로드
         bloodEffect = Resources.Load<GameObject>("BloodSprayEffect");
-
-        //몬스터의 상태를 체크하는 코루틴 함수 호출
-        StartCoroutine(CheckMonsterState());
-
-        //상태에 따라 몬스터의 행동을 수행하는 코루틴 함수 호출
-        StartCoroutine(MonsterAction());
 
     }
     //일정한 간격으로 몬스터의 행동 상태를 체크
@@ -153,6 +153,19 @@ public class MonsterCtrl : MonoBehaviour
                     anim.SetTrigger(hashDie);
                     //몬스터의 Collider 컴포넌트 비활성화
                     GetComponent<CapsuleCollider>().enabled = false;
+
+                    //일정 시간 대기 후 오브젝트 풀링으로 환원
+                    yield return new WaitForSeconds(3.0f);
+
+                    //사망 후 다시 사용할 때를 위해 hp 값 초기화
+                    hp = 100;
+                    isDie = false;
+
+                    //몬스터의 Collider 컴포넌트 활성화
+                    GetComponent<CapsuleCollider>().enabled = true;
+                    //몬스터를 비활성화
+                    this.gameObject.SetActive(false);
+
                     break;
             }
             yield return new WaitForSeconds(0.3f);
@@ -179,6 +192,8 @@ public class MonsterCtrl : MonoBehaviour
             if (hp <= 0)
             {
                 state = State.DIE;
+                //몬스터가 사망했을 때 50점을 추가
+                GameManager.instance.DisplayScore(50);
             }
         }
     }
