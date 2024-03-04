@@ -74,6 +74,9 @@ public class MonsterCtrl : MonoBehaviour
         //NavMeshAgent 컴포넌트 할당
         agent = GetComponent<NavMeshAgent>();
 
+        //NavMeshAgent의 자동 회전 기능 비활성화
+        agent.updateRotation = false;
+
         //추적 대상의위치를 설정하면 바로 추적 시작
         //agent.destination = playerTr.position;
 
@@ -83,6 +86,20 @@ public class MonsterCtrl : MonoBehaviour
         //BloodSprayEffect 프리팹 로드
         bloodEffect = Resources.Load<GameObject>("BloodSprayEffect");
 
+    }
+
+    void Update()
+    {
+        //목적지까지 남은 거리로 회전 여부 판단
+        if (agent.remainingDistance >= 2.0f)
+        {
+            //에이전트의 이동 방향
+            Vector3 direction = agent.desiredVelocity;
+            //회전 각도(쿼터니언) 산출
+            Quaternion rot = Quaternion.LookRotation(direction);
+            //구면 선형보간 함수로 부드러운 회전 처리
+            monsterTr.rotation = Quaternion.Slerp(monsterTr.rotation, rot, Time.deltaTime * 10.0f);
+        }
     }
     //일정한 간격으로 몬스터의 행동 상태를 체크
     IEnumerator CheckMonsterState()
