@@ -9,10 +9,47 @@ public class Player : MonoBehaviour
     private new Transform transform;
     private Vector3 moveDir;
 
+    private PlayerInput playerInput;
+    private InputActionMap mainActionMap;
+    private InputAction moveAction;
+    private InputAction attackAction;
+
+
     void Start()
     {
         anim = GetComponent<Animator>();
         transform = GetComponent<Transform>();
+        playerInput = GetComponent<PlayerInput>();
+
+        //ActionMap 추출
+        mainActionMap = playerInput.actions.FindActionMap("PlayerActions");
+
+        //Move,Attack 액션 추출
+        moveAction = mainActionMap.FindAction("Move");
+        attackAction = mainActionMap.FindAction("Attack");
+
+        //Move 액션의 performed 이벤트 연결
+        moveAction.performed += ctx =>
+        {
+            Vector2 dir = ctx.ReadValue<Vector2>();
+            moveDir = new Vector3(dir.x, 0, dir.y);
+             //Warrior_Run 애니메이션 실행
+             anim.SetFloat("Movement", dir.magnitude);
+        };
+        //Move액션의 Canceled 이벤트 연결
+        moveAction.canceled += ctx =>
+        {
+            moveDir = Vector3.zero;
+            //Warrior_Run 애니메이션 정지
+            anim.SetFloat("Movement", 0.0f);
+        };
+
+        //Attack 액션의 performed 이벤트 연결
+        attackAction.performed += ctx =>
+        {
+            Debug.Log("Atttack by c# event");
+            anim.SetTrigger("Attack");
+        };
     }
 
     void Update()
@@ -25,27 +62,26 @@ public class Player : MonoBehaviour
             transform.Translate(Vector3.forward * Time.deltaTime * 4.0f);
         }
     }
-
-    #region SEND_MESSAGE
+#region SEND_MESSAGE
     void OnMove(InputValue value)
     {
         Vector2 dir = value.Get<Vector2>();
 
         //2차원 좌표를 3차원 좌표로 변환
         moveDir = new Vector3(dir.x, 0, dir.y);
+        //Warrior_Run 애니메이션 실행
         anim.SetFloat("Movement", dir.magnitude);
-
-        Debug.Log($"Move = ({dir.x},{dir.y})");
+        Debug.Log($"Move = ({dir.x}, {dir.y})");
     }
-
+    
     void OnAttack()
     {
         Debug.Log("Attack");
         anim.SetTrigger("Attack");
     }
-    # endregion
+#endregion
 
-    #region UNITY_EVENTS
+#region UNITY_EVENTS
     public void OnMove(InputAction.CallbackContext ctx)
     {
         Vector2 dir = ctx.ReadValue<Vector2>();
@@ -53,7 +89,7 @@ public class Player : MonoBehaviour
         //2차원 좌표를 3차원 좌표로 변환
         moveDir = new Vector3(dir.x, 0, dir.y);
 
-        //Warrior_Run 애니메이션 실행
+        //Warrior_Run 애니메이션 설정
         anim.SetFloat("Movement", dir.magnitude);
     }
 
@@ -67,6 +103,5 @@ public class Player : MonoBehaviour
             anim.SetTrigger("Attack");
         }
     }
-    #endregion
-
+#endregion
 }
